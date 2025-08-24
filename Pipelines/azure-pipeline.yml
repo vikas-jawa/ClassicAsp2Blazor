@@ -1,0 +1,156 @@
+# ASP.NET
+# Build and test ASP.NET projects.
+# Add steps that publish symbols, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/apps/aspnet/build-aspnet-4
+
+
+# --------------------------------------------------------------------------
+# Blueprint-Based Pipeline Design Practice
+# --------------------------------------------------------------------------
+# See https://aka.ms/yaml for Azure DevOps Pipeline documentation
+#
+# --------------------------------------------------------------------------
+# FLOW
+#     - ContinuousIntegration
+#       - Pipeline initialization
+#       - Prerequisites
+#       - Build
+#       - Test
+#       - Publish Test results
+#       - Publish Code coverage results
+#     - ContiniousDeployment
+# --------------------------------------------------------------------------
+
+
+#trigger: none
+trigger:
+  batch: true
+  branches:
+    include:
+    - '*'
+  paths:
+    exclude:
+    - '/README.md'
+    - '/Pipelines/**'
+    - Pipelines
+    - README.md
+
+
+# Configure the default agent pool and image to use for your pipeline
+pool:
+  name:                 'Azure Pipelines'
+  vmImage:              'ubuntu-22.04'
+
+# Variables
+variables:
+  buildConfiguration:   Release
+  buildPlatform:        'Any CPU'
+  dotnetversion:        '8.x'
+  solution:             'ClassicAsp2Blazor.sln'
+  startupProject:       'ClassicAsp2Blazor.csproj'
+  
+
+stages:
+- stage: CI
+  displayName: Continious Integration 
+
+  jobs: 
+
+  # ---------------------------------------------------------------------------
+  # CI - Continious Integration 
+  # ---------------------------------------------------------------------------
+  - job: CI
+    displayName: Continious Integration 
+
+    steps :
+
+    ######### Install Dotnet SDK ##############################################
+    - task: UseDotNet@2
+      displayName: Instsall DotNet SDK $(dotnetVersion)
+      inputs:
+        version: $(dotnetVersion)
+    
+    ######### Restore dotnet tools ############################################
+    - task: DotNetCoreCLI@2
+      displayName: Install Dotnet Tools
+      inputs:
+        command: 'custom'
+        custom: 'tool'
+        arguments: 'restore'
+
+    ######### Restore the solution ############################################
+    - task: DotNetCoreCLI@2
+      displayName: Restore Solution Dependencies
+      inputs:
+        command: 'restore'
+        projects: '**/$(solution)'
+        feedsToUse: 'select'
+
+    ######### Restore dotnet workload determine file path #####################
+    - task: PowerShell@2
+      displayName: Determine file path
+      inputs:
+        targetType: inline
+        pwsh: true
+        script: |
+          $slnPath = Get-ChildItem -Path $(Build.SourcesDirectory) -Recurse -Filter $(solution) | Select-Object -First 1
+          Write-Host "##vso[task.setvariable variable=fullFilePath]$($slnPath.FullName)"
+    
+    ######### Restore dotnet workload restore #################################
+    - task: DotNetCoreCLI@2
+      displayName: Install Dotnet Workload Restore
+      inputs:
+        command: 'custom'
+        custom: 'workload'
+        arguments: 'restore $(fullFilePath)'
+
+    ######### Build solution ##################################################
+    - task: DotNetCoreCLI@2
+      displayName: "Build Solution - $(buildConfiguration)"
+      inputs:
+        command: 'build'
+        projects: '**/$(solution)'
+        arguments: '--no-restore --configuration $(buildConfiguration)'
+
+    ######### Execute Tests and publish results ###############################
+    - task: DotNetCoreCLI@2
+      displayName: "Run Tests"
+      inputs:
+        command: 'test'
+        projects: '**/Tests/**/*.??proj'
+        arguments: '--no-restore --configuration $(buildConfiguration) --collect:"XPlat Code Coverage;Format=Cobertura"'
+        publishTestResults: true
+
+    ######### Publish code coverage results ###################################
+    - task: PublishCodeCoverageResults@2
+      displayName: Publish Code Coverage Report
+      inputs:
+        summaryFileLocation: '$(Agent.TempDirectory)/**/*.cobertura.xml'
+
+    ######### Publish solution ################################################
+    - task: DotNetCoreCLI@2
+      displayName: Publish Project
+      inputs:
+        command: 'publish'
+        projects: '**/$(startupProject)'
+        publishWebProjects: false
+        arguments: '--no-build --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/$(buildConfiguration)'
+        zipAfterPublish: false
+
+    ######### Publish symbol path #############################################
+    - task: PublishSymbols@2
+      displayName: 'Publish symbols path'
+      inputs:
+        SearchPattern: '**/bin/**/*.pdb'
+        PublishSymbols: false
+      continueOnError: true
+    
+    ######### Publish artifacts ###############################################
+    - task: PublishBuildArtifacts@1
+      displayName: Publish Artifacts
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'drop'
+        publishLocation: 'Container'
+
+

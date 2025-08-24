@@ -1,0 +1,86 @@
+@page "/customer"
+@inherits IndexBase
+@rendermode InteractiveServer
+
+@using System.ComponentModel.DataAnnotations
+@using ClassicAsp2Blazor.Models.ViewModel
+
+<PageTitle>Customer</PageTitle>
+
+<h3 class="mb-4">Customer Information</h3>
+
+<div class="row container mt-4">
+
+    <div class="col-md-4 mt-3 mb-3">
+
+        <EditForm Model="@Customer" FormName="CustomerForm" OnValidSubmit="@HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger mb-3" />
+
+            <div class="mb-3">
+                <label for="firstName" class="form-label">First Name</label>
+                <InputText id="firstName" class="form-control" @bind-Value="Customer.FirstName" />
+                <ValidationMessage For="@(() => Customer.FirstName)" class="text-danger" />
+            </div>
+
+            <div class="mb-3">
+                <label for="lastName" class="form-label">Last Name</label>
+                <InputText id="lastName" class="form-control" @bind-Value="Customer.LastName" />
+                <ValidationMessage For="@(() => Customer.LastName)" class="text-danger" />
+            </div>
+
+            <div class="mb-3">
+                <label for="address" class="form-label">Address</label>
+                <InputText id="address" class="form-control" @bind-Value="Customer.Address" />
+                <ValidationMessage For="@(() => Customer.Address)" class="text-danger" />
+            </div>
+
+            <div class="mb-3">
+                <label for="telephone" class="form-label">Telephone</label>
+                <InputText id="telephone" class="form-control" @bind-Value="Customer.Telephone" />
+                <ValidationMessage For="@(() => Customer.Telephone)" class="text-danger" />
+            </div>
+
+            <button type="submit" class="btn btn-primary">Submit</button>
+
+        </EditForm>
+
+        @if (submitted)
+        {
+            <div class="alert alert-success mt-3">
+                <strong>Form Submitted!</strong><br />
+                <p>Customer record created with id: @customerId</p>
+            </div>
+        }
+
+    </div>
+
+    <div class="col-md-8  mt-3 mb-3">
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Address</th>
+                    <th>Telephone</th>
+                    <th>Active</th>
+                </tr>
+            </thead>
+                <tbody>
+                    @foreach(var cust in Customers)
+                    {
+                    <tr>
+                        <td>@cust.Id</td>
+                        <td>@cust.FirstName</td>
+                        <td>@cust.LastName</td>
+                        <td>@cust.Address</td>
+                        <td>@cust.Telephone</td>
+                        <td>@cust.Active</td>
+                    </tr>
+                    }
+            </tbody>
+        </table>
+    </div>
+
+</div>

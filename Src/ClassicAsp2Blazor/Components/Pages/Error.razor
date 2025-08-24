@@ -1,0 +1,40 @@
+﻿@page "/Error"
+@page "/Error/{ErrorId}"
+
+@using Microsoft.AspNetCore.Components.Web
+
+<div class="d-flex flex-column align-items-center justify-content-center text-center" style="min-height: 60vh;">
+    
+    <div class="mb-4" style="font-size: 5rem; color: #ffeb3b;">
+        &#9888; <!-- ⚠️ Warning sign -->
+    </div>
+
+    <h1 class="display-4 text-danger mb-3">Oops!</h1>
+    <h3 class="mb-3">Something went wrong while processing your request.</h3>
+
+    @if (!string.IsNullOrEmpty(ErrorId))
+    {
+        <p class="lead">
+            Please provide the following code to the administrator so they can investigate the issue:
+        </p>
+        <p class="bg-light p-3 rounded shadow-sm d-inline-block">
+            <strong>@ErrorId</strong>
+        </p>
+    }
+
+    <p class="mt-4 text-muted" style="max-width: 500px;">
+        Please contact support with the code above.
+        This will help us identify and resolve the issue faster.
+    </p>
+
+</div>
+
+@code {
+
+    [Parameter]
+    public string? ErrorId { get; set; }
+
+    [Inject]
+    private NavigationManager NavigationManager { get; set; } = default!;
+
+}
