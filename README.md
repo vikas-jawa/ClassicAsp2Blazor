@@ -88,9 +88,9 @@ Micro ORM
 - Website: https://github.com/DapperLib/Dapper
 
 ## Architecture
-![Architecture Diagram](docs/architecture.png)
+![Architecture Diagram](https://github.com/vikas-jawa/ClassicAsp2Blazor/blob/main/Docs/architecture.png)
 
 ## Error
 The shown guid can be found in the logs to trace the error
 
-![Architecture Diagram](docs/error.png)
+![Architecture Diagram](https://github.com/vikas-jawa/ClassicAsp2Blazor/blob/main/Docs/error.png)
